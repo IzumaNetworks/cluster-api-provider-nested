@@ -15,7 +15,7 @@
 # limitations under the License.
 
 # Build the manager binary
-FROM golang:1.16.2 as builder
+FROM golang:1.17 as builder
 
 ENV GO111MODULE=on
 
@@ -33,7 +33,7 @@ COPY cmd/    cmd/
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o manager sigs.k8s.io/cluster-api-provider-nested/virtualcluster/cmd/manager
 
 # Copy the controller-manager into a thin image
-FROM ubuntu:latest
+FROM debian:bullseye
 WORKDIR /
 COPY --from=builder /go/virtualcluster/manager .
 ENTRYPOINT ["/manager"]
