@@ -81,7 +81,7 @@ FROM ${base_image}
 COPY ${binary_name} /usr/local/bin/${binary_name}
 ${image_user}
 EOF
-      "${DOCKER[@]}" build -q -t "${docker_image_tag}" "${docker_build_path}" >/dev/null
+      "${DOCKER[@]}" build -t "${docker_image_tag}" "${docker_build_path}" >/dev/null
     ) &
   done
 

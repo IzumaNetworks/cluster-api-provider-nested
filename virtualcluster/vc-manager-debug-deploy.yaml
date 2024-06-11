@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vc-manager
+  namespace: vc-manager
+  labels:
+    app: vc-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vc-manager 
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: vc-manager
+        virtualcluster-webhook: "true"
+    spec:
+      serviceAccountName: vc-manager
+      containers:
+      - command:
+        - "/manager"
+        args:
+        - --disable-stacktrace=true
+        - --enable-webhook=true
+#        image: virtualcluster/manager-amd64
+        image: ghcr.io/izumanetworks/vc-manager-amd64:debug
+        imagePullPolicy: Always
+        name: vc-manager

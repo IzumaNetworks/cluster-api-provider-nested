@@ -39,6 +39,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/controller/secret"
 	aliyunutil "sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/controller/util/aliyun"
 	kubeutil "sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/controller/util/kube"
+	debugvc "sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/debug"
 	"sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/syncer/constants"
 )
 
@@ -46,6 +47,7 @@ type Aliyun struct {
 	client.Client
 	scheme             *runtime.Scheme
 	Log                logr.Logger
+	DLog               *debugvc.DebugLogger
 	ProvisionerTimeout time.Duration
 }
 
@@ -75,6 +77,7 @@ func NewProvisionerAliyun(mgr manager.Manager, log logr.Logger, provisionerTimeo
 		Client:             mgr.GetClient(),
 		scheme:             mgr.GetScheme(),
 		Log:                log.WithName("Aliyun"),
+		DLog:               debugvc.DebugLoggerWithName("Aliyun"),
 		ProvisionerTimeout: provisionerTimeout,
 	}, nil
 }

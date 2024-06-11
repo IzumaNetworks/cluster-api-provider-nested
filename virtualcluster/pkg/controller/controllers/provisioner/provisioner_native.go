@@ -36,6 +36,7 @@ import (
 	vcpki "sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/controller/pki"
 	"sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/controller/secret"
 	kubeutil "sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/controller/util/kube"
+	debugvc "sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/debug"
 	"sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/syncer/constants"
 	"sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/syncer/conversion"
 	"sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/syncer/util/featuregate"
@@ -56,6 +57,7 @@ type Native struct {
 	client.Client
 	scheme             *runtime.Scheme
 	Log                logr.Logger
+	DLog               *debugvc.DebugLogger
 	ProvisionerTimeout time.Duration
 }
 
@@ -64,6 +66,7 @@ func NewProvisionerNative(mgr manager.Manager, log logr.Logger, provisionerTimeo
 		Client:             mgr.GetClient(),
 		scheme:             mgr.GetScheme(),
 		Log:                log.WithName("Native"),
+		DLog:               debugvc.DebugLoggerWithName("Native"),
 		ProvisionerTimeout: provisionerTimeout,
 	}, nil
 }
@@ -80,6 +83,7 @@ func updateLabelClusterVersionApplied(vc *tenancyv1alpha1.VirtualCluster, cv *te
 // CreateVirtualCluster sets up the control plane for vc on meta k8s
 func (mpn *Native) CreateVirtualCluster(ctx context.Context, vc *tenancyv1alpha1.VirtualCluster) error {
 	cv, err := mpn.fetchClusterVersion(vc)
+	mpn.DLog.Info("CreateVirtualCluster @fetchClusterVersion", debugvc.IfErr(err))
 	if err != nil {
 		return err
 	}
@@ -88,10 +92,13 @@ func (mpn *Native) CreateVirtualCluster(ctx context.Context, vc *tenancyv1alpha1
 
 	// 1. create the root ns
 	_, err = kubeutil.CreateRootNS(mpn, vc)
+	mpn.DLog.Info("CreateVirtualCluster @CreateRootNS", "vc", vc.Name, "cv", cv.Name, "waserr", debugvc.IfErr(err))
 	if err != nil {
 		return err
 	}
-	return mpn.applyVirtualCluster(ctx, cv, vc, true)
+	err = mpn.applyVirtualCluster(ctx, cv, vc, true)
+	mpn.DLog.Info("CreateVirtualCluster @applyVirtualCluster", "vc", vc.Name, "cv", cv.Name, "waserr", debugvc.IfErr(err))
+	return err
 }
 
 func (mpn *Native) fetchClusterVersion(vc *tenancyv1alpha1.VirtualCluster) (*tenancyv1alpha1.ClusterVersion, error) {
@@ -135,6 +142,7 @@ func (mpn *Native) applyVirtualCluster(ctx context.Context, cv *tenancyv1alpha1.
 		}
 	}
 
+	mpn.DLog.Info("applyVirtualCluster @2 PKI", "vc", vc.Name, "cv", cv.Name, "isClusterIP", isClusterIP)
 	// 2. apply PKI
 	clusterCAGroup, err := mpn.createAndApplyPKI(ctx, vc, cv, isClusterIP)
 	if err != nil {
@@ -142,7 +150,9 @@ func (mpn *Native) applyVirtualCluster(ctx context.Context, cv *tenancyv1alpha1.
 	}
 
 	// 3. deploy etcd if defined
+
 	if applyETCD {
+		mpn.DLog.Info("applyVirtualCluster @3 deploy etcd", "vc", vc.Name, "cv", cv.Name, "applyETCD", applyETCD)
 		err = mpn.deployComponent(ctx, vc, cv.Spec.ETCD, clusterCAGroup)
 		if err != nil {
 			return err
@@ -150,6 +160,7 @@ func (mpn *Native) applyVirtualCluster(ctx context.Context, cv *tenancyv1alpha1.
 	}
 
 	// 4. deploy apiserver (must be defined always)
+	mpn.DLog.Info("applyVirtualCluster @4 deploy apiserver", "vc", vc.Name, "cv", cv.Name)
 	err = mpn.deployComponent(ctx, vc, cv.Spec.APIServer, clusterCAGroup)
 	if err != nil {
 		return err
@@ -157,11 +168,13 @@ func (mpn *Native) applyVirtualCluster(ctx context.Context, cv *tenancyv1alpha1.
 
 	// 5. deploy controller-manager if defined
 	if cv.Spec.ControllerManager != nil {
+		mpn.DLog.Info("applyVirtualCluster @5 deploy controller-manager", "vc", vc.Name, "cv", cv.Name)
 		err = mpn.deployComponent(ctx, vc, cv.Spec.ControllerManager, clusterCAGroup)
 		if err != nil {
 			return err
 		}
 	}
+	mpn.DLog.Info("applyVirtualCluster @last-return", "vc", vc.Name, "cv", cv.Name)
 	return nil
 }
 

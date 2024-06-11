@@ -38,6 +38,7 @@ import (
 
 	"sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/controller/constants"
 	logrutil "sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/controller/util/logr"
+	debugvc "sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/debug"
 	"sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/syncer/util/featuregate"
 	"sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/version"
 	"sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/version/verflag"
@@ -105,7 +106,7 @@ func main() {
 		log.Error(err, "unable to set up feature gates")
 		os.Exit(1)
 	}
-
+	dlog := debugvc.DebugLoggerWithName("main")
 	// Get a config to talk to the apiserver
 	log.Info("setting up client for manager")
 	cfg, err := config.GetConfig()
@@ -116,6 +117,7 @@ func main() {
 
 	// Create a new Cmd to provide shared dependencies and start components
 	log.Info("setting up manager")
+	dlog.Info("debug on for manager")
 
 	if leaderElectionCmName != "" {
 		leaderElectionID = leaderElectionCmName

@@ -37,6 +37,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/controller/controllers/provisioner"
 	kubeutil "sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/controller/util/kube"
 	strutil "sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/controller/util/strings"
+	debugvc "sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/debug"
 	"sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/syncer/constants"
 	"sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/syncer/util/featuregate"
 )
@@ -58,6 +59,7 @@ var _ reconcile.Reconciler = &ReconcileVirtualCluster{}
 type ReconcileVirtualCluster struct {
 	client.Client
 	Log                logr.Logger
+	DLog               *debugvc.DebugLogger
 	ProvisionerName    string
 	ProvisionerTimeout time.Duration
 	Provisioner        provisioner.Provisioner
@@ -159,9 +161,9 @@ func (r *ReconcileVirtualCluster) Reconcile(ctx context.Context, request reconci
 		if retryTimes > 0 {
 			err = r.Provisioner.CreateVirtualCluster(ctx, vc)
 			if err != nil {
-				r.Log.Error(err, "fail to create virtualcluster", "vc", vc.GetName(), "retrytimes", retryTimes)
-				errReason := fmt.Sprintf("fail to create virtualcluster(%s): %s", vc.GetName(), err)
 				errMsg := fmt.Sprintf("retry: %d", retryTimes-1)
+				errReason := fmt.Sprintf("fail to create virtualcluster(%s): %s", vc.GetName(), err)
+				r.Log.Error(err, "fail to create virtualcluster", "vc", vc.GetName(), "retrytimes", retryTimes, "details", err.Error())
 				kubeutil.SetVCStatus(vc, tenancyv1alpha1.ClusterPending, errMsg, errReason)
 			} else {
 				kubeutil.SetVCStatus(vc, tenancyv1alpha1.ClusterRunning,
