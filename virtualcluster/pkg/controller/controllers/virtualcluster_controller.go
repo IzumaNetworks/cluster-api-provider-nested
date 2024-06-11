@@ -59,7 +59,7 @@ var _ reconcile.Reconciler = &ReconcileVirtualCluster{}
 type ReconcileVirtualCluster struct {
 	client.Client
 	Log                logr.Logger
-	DLog               *debugvc.DebugLogger
+	DLog               debugvc.DebugLogger
 	ProvisionerName    string
 	ProvisionerTimeout time.Duration
 	Provisioner        provisioner.Provisioner
@@ -161,6 +161,7 @@ func (r *ReconcileVirtualCluster) Reconcile(ctx context.Context, request reconci
 		if retryTimes > 0 {
 			err = r.Provisioner.CreateVirtualCluster(ctx, vc)
 			if err != nil {
+				r.DLog.Error(err, "fail to create virtualcluster", "vc", vc.GetName(), "retrytimes", retryTimes, "details", err.Error())
 				errMsg := fmt.Sprintf("retry: %d", retryTimes-1)
 				errReason := fmt.Sprintf("fail to create virtualcluster(%s): %s", vc.GetName(), err)
 				r.Log.Error(err, "fail to create virtualcluster", "vc", vc.GetName(), "retrytimes", retryTimes, "details", err.Error())
@@ -170,6 +171,7 @@ func (r *ReconcileVirtualCluster) Reconcile(ctx context.Context, request reconci
 					"tenant control plane is running", "TenantControlPlaneRunning")
 			}
 		} else {
+			r.DLog.Error(err, "too many tries: fail to create virtualcluster", "vc", vc.GetName(), "retrytimes", retryTimes, "details", err.Error())
 			kubeutil.SetVCStatus(vc, tenancyv1alpha1.ClusterError,
 				"fail to create virtualcluster", "TenantControlPlaneError")
 		}
@@ -217,9 +219,11 @@ func (r *ReconcileVirtualCluster) Reconcile(ctx context.Context, request reconci
 		})
 		return
 	case tenancyv1alpha1.ClusterError:
+		r.DLog.Info("VirtualCluster is in error state - tenancyv1alpha1.ClusterError", "vc", vc.GetName())
 		r.Log.Info("fail to create virtualcluster", "vc", vc.GetName())
 		return
 	default:
+		r.DLog.Info("VirtualCluster is in unknown state", "vc", vc.GetName(), "phase", vc.Status.Phase)
 		err = fmt.Errorf("unknown vc phase: %s", vc.Status.Phase)
 		return
 	}
