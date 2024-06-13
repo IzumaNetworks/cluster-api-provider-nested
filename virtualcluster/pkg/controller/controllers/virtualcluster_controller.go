@@ -171,7 +171,7 @@ func (r *ReconcileVirtualCluster) Reconcile(ctx context.Context, request reconci
 					"tenant control plane is running", "TenantControlPlaneRunning")
 			}
 		} else {
-			r.DLog.Error(err, "too many tries: fail to create virtualcluster", "vc", vc.GetName(), "retrytimes", retryTimes, "details", err.Error())
+			r.DLog.Error(err, "too many tries: fail to create virtualcluster", "vc", vc.GetName(), "retrytimes", retryTimes, "details", debugvc.IfErr(err))
 			kubeutil.SetVCStatus(vc, tenancyv1alpha1.ClusterError,
 				"fail to create virtualcluster", "TenantControlPlaneError")
 		}

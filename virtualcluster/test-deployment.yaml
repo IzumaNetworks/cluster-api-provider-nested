@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-deploy
+  labels:
+    app: vc-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vc-test
+  template:
+    metadata:
+      labels:
+        app: vc-test
+    spec:
+      containers:
+      - name: poc
+        image: busybox
+        command:
+        - top

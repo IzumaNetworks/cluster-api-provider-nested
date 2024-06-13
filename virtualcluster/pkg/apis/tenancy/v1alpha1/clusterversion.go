@@ -16,13 +16,18 @@ limitations under the License.
 
 package v1alpha1
 
-import "fmt"
+import (
+	"fmt"
+
+	vcdebug "sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/debug"
+)
 
 // GetEtcdDomain returns the dns of etcd service, note that, though the
 // complete etcd svc dns is {etcdSvcName}.{namespace}.svc.{clusterdomain},
 // this EtcdDomain is only used by apiserver that in the same namespace,
 // so the etcdSvcName is adequate
 func (cv *ClusterVersion) GetEtcdDomain() string {
+	vcdebug.Info("etcdSvcName", cv.Spec.ETCD.Service.Name)
 	return cv.Spec.ETCD.Service.Name
 }
 
@@ -34,6 +39,7 @@ func (cv *ClusterVersion) GetEtcdServers() (etcdServers []string) {
 	for ; i < *replicas; i++ {
 		etcdServers = append(etcdServers, fmt.Sprintf("%s-%d.%s", etcdStsName, i, cv.GetEtcdDomain()))
 	}
+	vcdebug.Info("etcdServers", etcdServers)
 	return etcdServers
 }
 
@@ -42,5 +48,6 @@ func (cv *ClusterVersion) GetEtcdServers() (etcdServers []string) {
 // TODO support NodePort and ClusterIP for accessing apiserver from
 // outside the cluster
 func (cv *ClusterVersion) GetAPIServerDomain(namespace string) string {
+	vcdebug.Info("GetAPIServerDomain", cv.Spec.APIServer.Service.Name+"."+namespace)
 	return cv.Spec.APIServer.Service.Name + "." + namespace
 }

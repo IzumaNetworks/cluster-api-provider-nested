@@ -57,7 +57,7 @@ type Native struct {
 	client.Client
 	scheme             *runtime.Scheme
 	Log                logr.Logger
-	DLog               *debugvc.DebugLogger
+	DLog               debugvc.DebugLogger
 	ProvisionerTimeout time.Duration
 }
 
@@ -362,6 +362,7 @@ func (mpn *Native) createAndApplyPKI(ctx context.Context, vc *tenancyv1alpha1.Vi
 	err := mpn.Get(ctx, client.ObjectKey{Name: secret.RootCASecretName, Namespace: vc.Status.ClusterNamespace}, rootCaSecret)
 	switch {
 	case err == nil:
+		mpn.DLog.Info("rootCA secret is found", "name", secret.RootCASecretName, "namespace", vc.Status.ClusterNamespace)
 		rootCACrt, rootCAErr := pkiutil.DecodeCertPEM(rootCaSecret.Data[corev1.TLSCertKey])
 		if rootCAErr != nil {
 			return nil, rootCAErr
@@ -411,6 +412,7 @@ func (mpn *Native) createAndApplyPKI(ctx context.Context, vc *tenancyv1alpha1.Vi
 	// create crt, key for etcd
 	etcdCAPair, etcdCrtErr := vcpki.NewEtcdServerCertAndKey(rootCAPair, etcdDomains)
 	if etcdCrtErr != nil {
+		mpn.DLog.Error(etcdCrtErr, "failed to generate etcd crt/key pair")
 		return nil, etcdCrtErr
 	}
 	caGroup.ETCD = etcdCAPair
@@ -418,6 +420,7 @@ func (mpn *Native) createAndApplyPKI(ctx context.Context, vc *tenancyv1alpha1.Vi
 	// create crt, key for frontendproxy
 	frontProxyCAPair, frontProxyCrtErr := vcpki.NewFrontProxyClientCertAndKey(rootCAPair)
 	if frontProxyCrtErr != nil {
+		mpn.DLog.Error(frontProxyCrtErr, "failed to generate frontproxy crt/key pair")
 		return nil, frontProxyCrtErr
 	}
 	caGroup.FrontProxy = frontProxyCAPair
@@ -432,8 +435,10 @@ func (mpn *Native) createAndApplyPKI(ctx context.Context, vc *tenancyv1alpha1.Vi
 	}
 
 	apiserverDomain := cv.GetAPIServerDomain(ns)
+	mpn.DLog.Info("GetAPIServerDomain is", "domain", apiserverDomain)
 	apiserverCAPair, err := vcpki.NewAPIServerCrtAndKey(rootCAPair, vc, apiserverDomain, clusterIP)
 	if err != nil {
+		mpn.DLog.Error(err, "failed to generate apiserver crt/key pair")
 		return nil, err
 	}
 	caGroup.APIServer = apiserverCAPair
@@ -442,7 +447,7 @@ func (mpn *Native) createAndApplyPKI(ctx context.Context, vc *tenancyv1alpha1.Vi
 	if clusterIP != "" {
 		finalAPIAddress = clusterIP
 	}
-
+	mpn.DLog.Info("finalAPIAddress: ", "address", finalAPIAddress, "clusterIP", clusterIP, "apiServerDomain", apiserverDomain)
 	// create kubeconfig for controller-manager
 	ctrlmgrKbCfg, err := kubeconfig.GenerateKubeconfig(
 		"system:kube-controller-manager",
@@ -457,6 +462,7 @@ func (mpn *Native) createAndApplyPKI(ctx context.Context, vc *tenancyv1alpha1.Vi
 		"admin", vc.Name, finalAPIAddress,
 		[]string{"system:masters"}, rootCAPair)
 	if err != nil {
+		mpn.DLog.Error(err, "failed to generate admin kubeconfig")
 		return nil, err
 	}
 	caGroup.AdminKbCfg = adminKbCfg

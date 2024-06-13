@@ -28,6 +28,7 @@ import (
 	"text/template"
 
 	vcpki "sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/controller/pki"
+	vcdebug "sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/debug"
 )
 
 const (
@@ -94,6 +95,7 @@ func generateKubeconfigUseCertAndKey(clusterName string, ips []string, apiserver
 			urls = append(urls, fmt.Sprintf("https://[%v]:6443", ip))
 		}
 	}
+	vcdebug.Info("generateKubeconfigUseCertAndKey", "controlplane urls", urls)
 	ctx := map[string]string{
 		"ca":           base64.StdEncoding.EncodeToString(encodeCertPEM(apiserverCA)),
 		"key":          base64.StdEncoding.EncodeToString(encodePrivateKeyPEM(caPair.Key)),
