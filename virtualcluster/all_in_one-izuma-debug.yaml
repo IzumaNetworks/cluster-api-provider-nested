@@ -390,8 +390,9 @@ spec:
       serviceAccountName: vc-syncer
       containers:
         - command:
-            - syncer
-          image: virtualcluster/syncer-amd64
+            - /syncer
+          #image: virtualcluster/syncer-amd64
+          image: ghcr.io/izumanetworks/vc-syncer-amd64:debug          
           imagePullPolicy: Always
           name: vc-syncer
           livenessProbe:

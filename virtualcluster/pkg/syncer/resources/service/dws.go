@@ -26,6 +26,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
 
+	vcdebug "sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/debug"
 	"sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/syncer/constants"
 	"sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/syncer/conversion"
 	"sigs.k8s.io/cluster-api-provider-nested/virtualcluster/pkg/syncer/util"
@@ -86,6 +87,7 @@ func (c *controller) Reconcile(request reconciler.Request) (reconciler.Result, e
 func (c *controller) reconcileServiceCreate(clusterName, targetNamespace, requestUID string, service *corev1.Service) error {
 	newObj, err := c.Conversion().BuildSuperClusterObject(clusterName, service)
 	if err != nil {
+		vcdebug.Error(err, "failed to build super cluster service object")
 		return err
 	}
 

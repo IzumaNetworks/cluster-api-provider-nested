@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vc-syncer
+  namespace: vc-manager
+  labels:
+    app: vc-syncer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vc-syncer
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: vc-syncer
+    spec:
+      serviceAccountName: vc-syncer
+      containers:
+        - command:
+            - /syncer
+          #image: virtualcluster/syncer-amd64
+          image: ghcr.io/izumanetworks/vc-syncer-amd64:debug          
+          imagePullPolicy: Always
+          name: vc-syncer
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            successThreshold: 1
+            tcpSocket:
+              port: 8080
+            timeoutSeconds: 1
