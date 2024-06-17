@@ -30,7 +30,7 @@ COPY pkg/    pkg/
 COPY cmd/    cmd/
 
 # Build
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -tags vcdebugout -o syncer sigs.k8s.io/cluster-api-provider-nested/virtualcluster/cmd/syncer
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o syncer sigs.k8s.io/cluster-api-provider-nested/virtualcluster/cmd/syncer
 
 # Copy the controller-manager into a thin image
 FROM debian:bullseye

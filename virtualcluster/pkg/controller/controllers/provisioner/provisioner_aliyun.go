@@ -47,7 +47,7 @@ type Aliyun struct {
 	client.Client
 	scheme             *runtime.Scheme
 	Log                logr.Logger
-	DLog               *debugvc.DebugLogger
+	DLog               debugvc.DebugLogger
 	ProvisionerTimeout time.Duration
 }
 
