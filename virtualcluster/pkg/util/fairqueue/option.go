@@ -19,8 +19,8 @@ package fairqueue
 import (
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/client-go/util/workqueue"
+	"k8s.io/utils/clock"
 )
 
 type option struct {
@@ -32,7 +32,7 @@ type option struct {
 	clock clock.Clock
 
 	// heartbeat ensures we wait no more than maxWait before firing
-	heartbeat clock.Ticker
+	heartbeat *time.Ticker
 
 	rateLimiter workqueue.RateLimiter
 }
@@ -41,7 +41,7 @@ var defaultConfig = option{
 	queueExpireDuration: 5 * time.Minute,
 	gcTick:              time.NewTicker(1 * time.Minute),
 	clock:               clock.RealClock{},
-	heartbeat:           clock.RealClock{}.NewTicker(maxWait),
+	heartbeat:           time.NewTicker(maxWait), //clock.RealClock{}.Tick(maxWait),
 	rateLimiter:         workqueue.DefaultControllerRateLimiter(),
 }
 

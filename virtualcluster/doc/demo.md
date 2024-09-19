@@ -96,6 +96,16 @@ replicaset.apps/vc-manager-76c5878465   1         1         1       92s
 replicaset.apps/vc-syncer-55c5bc5898    1         1         1       92s
 ```
 
+See if the CRDs are installed by running `kubectl get crd` command.
+
+```bash
+$ kubectl get crd
+NAME                                       CREATED AT
+...
+clusterversions.tenancy.x-k8s.io             2024-09-14T19:16:36Z
+virtualclusters.tenancy.x-k8s.io             2024-09-14T19:26:24Z
+```
+
 ## (Optional) Create `kubelet` client secrete and update `vn-agent`
 
 By default, `vn-agent` works in a suboptimal mode by forwarding all `kubelet` API requests to super control-plane.
@@ -155,6 +165,8 @@ $ kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/cluster-api
 ```
 
 > Note that tenant control plane does not have scheduler installed. The Pods are still scheduled as usual in super control plane.
+
+You can check clusterversion you have created by running `kubectl get clusterversion` command.
 
 ## Create VirtualCluster
 
@@ -242,6 +254,14 @@ kube-public                                  Active   30m
 kube-system                                  Active   30m
 local-path-storage                           Active   30m
 vc-manager                                   Active   20m
+```
+
+## What virtual cluster's are running?
+
+```bash
+$ kubectl get virtualcluster
+NAME          AGE    PHASE     CLUSTERVERSION
+vc-sample-1   155m   Running   cv-sample-np
 ```
 
 ## Let's do some experiments
@@ -356,6 +376,42 @@ Use `exit` command to exit the cluster context
 # exit
 exit
 ❗ exit VirtualCluster default/vc-sample-1
+```
+
+### Another way to get the kubeconfig for an existing VirtualCluster
+
+Look for a secret named `admin-kubeconfig` in the VC namespace.
+
+```bash
+$ kubectl get secrets -A
+...
+default-f24db8-vc-sample-1      admin-kubeconfig       Opaque   1      3h
+...
+``` 
+It's there. Let's decode all of its keys.
+
+Handy script `get-all-secret-keys.sh`:
+
+```bash
+#!/bin/bash
+NS=${NS:-default}
+for key in $(kubectl get secret -n ${NS} ${1} -o jsonpath="{.data}" | jq -r 'keys[]'); do
+  echo "Key: $key"
+    kubectl get secret ${1} -n ${NS} -o jsonpath="{.data.$key}" | base64 --decode
+    echo -e "\n"
+done
+```
+
+```bash
+$ NS=default-f24db8-vc-sample-1 ~/work/get-secret-keys.sh admin-kubeconfig
+Key: admin-kubeconfig
+
+kind: Config
+apiVersion: v1
+users:
+- name: admin
+  user:
+    client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1...
 ```
 
 ## Clean Up

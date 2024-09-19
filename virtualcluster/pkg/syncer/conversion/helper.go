@@ -282,7 +282,7 @@ func ResetMetadata(obj metav1.Object) {
 	obj.SetDeletionGracePeriodSeconds(nil)
 	obj.SetOwnerReferences(nil)
 	obj.SetFinalizers(nil)
-	obj.SetClusterName("")
+	// obj.SetClusterName("")
 }
 
 func BuildVirtualEvent(cluster string, pEvent *v1.Event, vObj client.Object) *v1.Event {

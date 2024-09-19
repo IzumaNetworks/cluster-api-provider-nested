@@ -153,12 +153,14 @@ func (e vcEquality) CheckDWObjectMetaEquality(pObj, vObj *metav1.ObjectMeta) *me
 		updatedObj.Annotations = annotations
 	}
 
-	if pObj.ClusterName != vObj.ClusterName {
-		if updatedObj == nil {
-			updatedObj = pObj.DeepCopy()
-		}
-		updatedObj.ClusterName = vObj.ClusterName
-	}
+	// these fields are no longer used in apimachinery
+	// https://github.com/kubernetes/apimachinery/commit/430b920312ca0fa10eca95967764ff08f34083a3
+	// if pObj.ClusterName != vObj.ClusterName {
+	// 	if updatedObj == nil {
+	// 		updatedObj = pObj.DeepCopy()
+	// 	}
+	// 	updatedObj.ClusterName = vObj.ClusterName
+	// }
 
 	return updatedObj
 }
@@ -750,7 +752,7 @@ func (e vcEquality) CheckUWPVCStatusEquality(pObj, vObj *v1.PersistentVolumeClai
 			if updated == nil {
 				updated = vObj.DeepCopy()
 			}
-			klog.Warningf("Virtual cluster's PVC %s in %s is %v while the super cluster's PVC %s is not", vObj.Name, vObj.ClusterName, v1.ClaimBound, pObj.Name)
+			klog.Warningf("Virtual cluster's PVC %s in (some cluster) is %v while the super cluster's PVC %s is not", vObj.Name, v1.ClaimBound, pObj.Name)
 			updated.Status.Phase = pObj.Status.Phase
 		}
 	}

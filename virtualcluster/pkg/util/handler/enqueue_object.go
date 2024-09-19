@@ -45,7 +45,7 @@ func (e *EnqueueRequestForObject) enqueue(obj interface{}) {
 	e.Queue.Add(r)
 }
 
-func (e *EnqueueRequestForObject) OnAdd(obj interface{}) {
+func (e *EnqueueRequestForObject) OnAdd(obj interface{}, isInitialList bool) {
 	e.enqueue(obj)
 }
 

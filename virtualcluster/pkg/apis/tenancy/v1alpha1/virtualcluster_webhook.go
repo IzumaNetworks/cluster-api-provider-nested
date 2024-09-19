@@ -26,6 +26,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 var vclog = logf.Log.WithName("virtualcluster-webhook")
@@ -40,23 +41,23 @@ func (vc *VirtualCluster) SetupWebhookWithManager(mgr ctrl.Manager) error {
 var _ webhook.Validator = &VirtualCluster{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (vc *VirtualCluster) ValidateCreate() error {
+func (vc *VirtualCluster) ValidateCreate() (admission.Warnings, error) {
 	vclog.Info("validate create", "vc-name", vc.Name)
 	// do nothing for delete request
-	return nil
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (vc *VirtualCluster) ValidateUpdate(old runtime.Object) error {
+func (vc *VirtualCluster) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	vclog.Info("validate update", "vc-name", vc.Name)
-	return vc.validateVirtualClusterUpdate(old)
+	return nil, vc.validateVirtualClusterUpdate(old)
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (vc *VirtualCluster) ValidateDelete() error {
+func (vc *VirtualCluster) ValidateDelete() (admission.Warnings, error) {
 	vclog.Info("validate delete", "vc-name", vc.Name)
 	// do nothing for delete request
-	return nil
+	return nil, nil
 }
 
 func (vc *VirtualCluster) validateVirtualClusterUpdate(old runtime.Object) error {

@@ -146,7 +146,7 @@ func (q *fairQueue) waitingLoop() {
 		case <-q.stopCh:
 			return
 
-		case <-q.heartbeat.C():
+		case <-q.heartbeat.C:
 			// continue the loop, which will add ready items
 
 		case <-nextReadyAt:

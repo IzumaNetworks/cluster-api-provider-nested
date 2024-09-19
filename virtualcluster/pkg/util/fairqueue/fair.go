@@ -86,6 +86,24 @@ func NewRateLimitingFairQueue(opts ...OptConfig) workqueue.RateLimitingInterface
 	return ret
 }
 
+// ShutDownWithDrain stops the queue gracefully, ensuring all items are processed.
+func (q *fairQueue) ShutDownWithDrain() {
+	q.ShutDown()
+	// Wait for all items to be processed.
+	q.Drain()
+}
+
+func (q *fairQueue) Drain() {
+	q.cond.L.Lock()
+	defer q.cond.L.Unlock()
+	for {
+		if q.length == 0 {
+			break
+		}
+		q.cond.Wait()
+	}
+}
+
 func (q *fairQueue) Add(obj interface{}) {
 	q.cond.L.Lock()
 	defer q.cond.L.Unlock()

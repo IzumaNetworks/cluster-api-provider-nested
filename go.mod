@@ -3,7 +3,7 @@ module sigs.k8s.io/cluster-api-provider-nested
 go 1.16
 
 require (
-	github.com/go-logr/logr v0.4.0
+	github.com/go-logr/logr v1.2.0
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.14.0
 	github.com/pkg/errors v0.9.1
@@ -11,9 +11,10 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.21.9
 	k8s.io/apimachinery v0.21.9
-	k8s.io/component-base v0.21.9
 	k8s.io/client-go v0.21.9
-	k8s.io/klog/v2 v2.10.0
+	k8s.io/component-base v0.21.9
+	k8s.io/klog/v2 v2.80.1
+	k8s.io/utils v0.0.0-20240902221715-702e33fdd3c3 // indirect
 	sigs.k8s.io/cluster-api v0.4.0
 	sigs.k8s.io/controller-runtime v0.9.3
 	sigs.k8s.io/kubebuilder-declarative-pattern v0.0.0-20210630174303-f77bb4933dfb
